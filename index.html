@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0f1f3d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Chimpay">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Iván Chimpay y Asociados</title>
+<link rel="icon" type="image/jpeg" href="assets/recibo_chimpay.jpg">
+<link rel="apple-touch-icon" href="assets/recibo_chimpay.jpg">
+<link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;Chimpay Recibos&quot;,&quot;short_name&quot;:&quot;Chimpay&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;theme_color&quot;:&quot;%230f1f3d&quot;,&quot;background_color&quot;:&quot;%23f7f5f0&quot;}">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+:root {
+  --navy:        #0f1f3d;
+  --navy-mid:    #1a3360;
+  --navy-soft:   #1e3a70;
+  --gold:        #a07830;
+  --gold-mid:    #c49a48;
+  --gold-light:  #e8c97a;
+  --gold-pale:   #f5eed8;
+  --cream:       #f7f5f0;
+  --white:       #ffffff;
+  --ink:         #1c1c1c;
+  --muted:       #6b7080;
+  --line:        #ddd8cc;
+  --success-bg:  #e8f5ee;
+  --success-fg:  #1a6640;
+  --pending-bg:  #fef3e2;
+  --pending-fg:  #8a5a00;
+  --partial-bg:  #fce8e8;
+  --partial-fg:  #8a1a1a;
+  --r: 10px;
+  --shadow: 0 2px 16px rgba(15,31,61,0.10);
+  --shadow-lg: 0 6px 32px rgba(15,31,61,0.16);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: 'Jost', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
+}
+
+/* ============ SPLASH ============ */
+#splash {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--navy);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 24px;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+#splash.hidden { opacity: 0; visibility: hidden; }
+
+.splash-logo-wrap {
+  width: 110px; height: 110px;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 3px solid var(--gold-mid);
+  box-shadow: 0 0 0 8px rgba(196,154,72,0.15);
+  animation: pulseRing 2s ease-in-out infinite;
+}
+@keyframes pulseRing {
+  0%, 100% { box-shadow: 0 0 0 8px rgba(196,154,72,0.15); }
+  50%       { box-shadow: 0 0 0 18px rgba(196,154,72,0.05); }
+}
+.splash-logo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+.splash-logo-placeholder {
+  width: 100%; height: 100%;
+  background: var(--navy-mid);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 40px; font-weight: 700;
+  color: var(--gold-mid);
+  letter-spacing: 2px;
+}
+
+.splash-text { text-align: center; }
+.splash-text h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; font-weight: 700;
+  color: var(--white); letter-spacing: 0.5px;
+  line-height: 1.25;
+}
+.splash-text p {
+  font-size: 11px; font-weight: 400;
+  color: var(--gold-light);
+  letter-spacing: 2.5px; text-transform: uppercase;
+  margin-top: 6px;
+}
+
+.splash-bar {
+  width: 160px; height: 2px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 2px; overflow: hidden;
+}
+.splash-bar-inner {
+  height: 100%; width: 0%;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 2px;
+  animation: loadBar 1.8s ease forwards;
+}
+@keyframes loadBar { to { width: 100%; } }
+
+/* ============ HEADER ============ */
+.app-header {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--navy);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05), 0 2px 20px rgba(0,0,0,0.3);
+}
+.header-inner {
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  max-width: 560px; margin: 0 auto;
+}
+.brand { display: flex; align-items: center; gap: 11px; }
+.brand-logo {
+  width: 36px; height: 36px; border-radius: 8px;
+  overflow: hidden; flex-shrink: 0;
+  border: 1.5px solid var(--gold-mid);
+}
+.brand-logo img { width: 100%; height: 100%; object-fit: cover; }
+.brand-logo-placeholder {
+  width: 100%; height: 100%; background: var(--navy-mid);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px; font-weight: 700; color: var(--gold-mid);
+}
+.brand-info h1 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px; font-weight: 700;
+  color: var(--white); line-height: 1.15;
+}
+.brand-info p {
+  font-size: 9.5px; font-weight: 400;
+  color: var(--gold-light);
+  letter-spacing: 1.8px; text-transform: uppercase;
+}
+.btn-nuevo {
+  background: var(--gold);
+  color: var(--navy);
+  border: none;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-family: 'Jost', sans-serif;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.btn-nuevo:active { background: var(--gold-mid); }
+
+/* TABS */
+.tabs {
+  display: flex;
+  background: var(--navy-mid);
+  max-width: 560px; margin: 0 auto;
+}
+.tab {
+  flex: 1; padding: 10px 8px;
+  text-align: center;
+  font-family: 'Jost', sans-serif;
+  font-size: 11px; font-weight: 600;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 1px; text-transform: uppercase;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.tab.active { color: var(--gold-light); border-bottom-color: var(--gold-mid); }
+
+/* ============ MAIN ============ */
+.main {
+  max-width: 560px; margin: 0 auto;
+  padding: 18px 14px 100px;
+}
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* ============ CARDS ============ */
+.card {
+  background: var(--white);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.card-head {
+  background: var(--navy);
+  padding: 11px 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-head-line {
+  width: 3px; height: 18px;
+  background: var(--gold-mid);
+  border-radius: 2px; flex-shrink: 0;
+}
+.card-head h2 {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px; font-weight: 600;
+  color: var(--white); letter-spacing: 0.5px;
+}
+.card-body { padding: 16px; }
+
+/* ============ RECIBO BADGE ============ */
+.recibo-badge {
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--gold-pale);
+  border: 1px solid rgba(160,120,48,0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+.recibo-badge .label {
+  font-size: 10px; font-weight: 600;
+  color: var(--gold); letter-spacing: 1.2px; text-transform: uppercase;
+}
+.recibo-badge .num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--navy);
+}
+
+/* ============ FORM ============ */
+.form-group { margin-bottom: 13px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 340px) { .form-row { grid-template-columns: 1fr; } }
+
+label {
+  display: block;
+  font-size: 10.5px; font-weight: 600;
+  color: var(--navy);
+  letter-spacing: 0.8px; text-transform: uppercase;
+  margin-bottom: 5px;
+}
+input, select, textarea {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid var(--line);
+  border-radius: 7px;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px; color: var(--ink);
+  background: var(--cream);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(160,120,48,0.12);
+}
+textarea { resize: vertical; min-height: 72px; }
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%230f1f3d'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 34px;
+  cursor: pointer;
+}
+
+/* ============ AMOUNT BOX ============ */
+.amount-box {
+  background: var(--navy);
+  border-radius: 8px;
+  padding: 14px 16px;
+  text-align: center;
+  margin-top: 6px;
+}
+.amount-box .lbl {
+  font-size: 9px; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--gold-light);
+  margin-bottom: 4px;
+}
+.amount-box .val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 30px; font-weight: 700;
+  color: var(--white);
+}
+.amount-box .curr {
+  font-size: 14px; margin-right: 4px;
+  color: var(--gold-light);
+}
+
+/* ============ BUTTONS ============ */
+.btn {
+  width: 100%; padding: 14px;
+  border: none; border-radius: 8px;
+  font-family: 'Jost', sans-serif;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+  letter-spacing: 0.3px;
+}
+.btn-primary {
+  background: var(--gold);
+  color: var(--navy);
+  box-shadow: 0 4px 14px rgba(160,120,48,0.3);
+  margin-bottom: 10px;
+}
+.btn-primary:active { background: var(--gold-mid); transform: scale(0.99); }
+.btn-secondary {
+  background: #f0ede8;
+  color: var(--muted);
+  border: 1.5px solid var(--line);
+}
+.btn-danger {
+  background: #fde8e8;
+  color: #8a1a1a;
+  border: 1.5px solid #f0b0b0;
+  font-size: 13px; padding: 11px;
+}
+
+/* ============ STATS ============ */
+.stats-row {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; margin-bottom: 14px;
+}
+.stat-box {
+  background: var(--white);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  border-left: 4px solid var(--gold);
+}
+.stat-box .s-val {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px; font-weight: 700;
+  color: var(--navy);
+}
+.stat-box .s-lbl {
+  font-size: 10px; font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.8px; text-transform: uppercase;
+  margin-top: 2px;
+}
+
+/* ============ HISTORY ============ */
+.history-item {
+  background: var(--white);
+  border-radius: var(--r);
+  box-shadow: var(--shadow);
+  padding: 13px 14px;
+  margin-bottom: 9px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer;
+  border-left: 3px solid var(--gold);
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+.history-item:active { transform: scale(0.99); }
+.h-info { flex: 1; min-width: 0; }
+.h-name {
+  font-weight: 600; font-size: 13.5px;
+  color: var(--navy);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.h-concept {
+  font-size: 12px; color: var(--muted);
+  margin-top: 2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.h-date { font-size: 10.5px; color: var(--muted); margin-top: 3px; }
+.h-right { text-align: right; flex-shrink: 0; }
+.h-amount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 17px; font-weight: 700; color: var(--navy);
+}
+.h-num { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+.estado-pill {
+  display: inline-block;
+  padding: 2px 8px; border-radius: 20px;
+  font-size: 9.5px; font-weight: 600;
+  letter-spacing: 0.4px; margin-top: 3px;
+}
+.e-pagado   { background: var(--success-bg); color: var(--success-fg); }
+.e-pendiente{ background: var(--pending-bg); color: var(--pending-fg); }
+.e-parcial  { background: var(--partial-bg); color: var(--partial-fg); }
+
+.empty {
+  text-align: center; padding: 50px 20px;
+  color: var(--muted); font-size: 14px; line-height: 1.6;
+}
+.empty .e-icon {
+  width: 56px; height: 56px;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  margin: 0 auto 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.empty .e-icon svg { opacity: 0.3; }
+
+/* ============ MODAL ============ */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(5,12,28,0.75);
+  z-index: 500;
+  display: none; align-items: flex-end; justify-content: center;
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--white);
+  border-radius: 20px 20px 0 0;
+  width: 100%; max-width: 560px;
+  max-height: 88vh; overflow-y: auto;
+  padding: 18px 18px 28px;
+  animation: modalUp 0.28s ease;
+}
+@keyframes modalUp {
+  from { transform: translateY(60px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.modal-handle {
+  width: 38px; height: 4px;
+  background: var(--line);
+  border-radius: 2px; margin: 0 auto 16px;
+}
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--navy); text-align: center; margin-bottom: 4px;
+}
+.modal-sub { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 14px; }
+.modal-summary {
+  background: var(--cream);
+  border-radius: 8px; padding: 14px;
+  font-size: 13px; line-height: 1.9;
+  border: 1px solid var(--line);
+}
+.modal-summary strong { color: var(--navy); font-weight: 600; }
+.summary-divider { border: none; border-top: 1px solid var(--line); margin: 8px 0; }
+.modal-actions {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 10px; margin-top: 14px;
+}
+.btn-share {
+  width: 100%; padding: 12px;
+  border: 1.5px solid var(--navy-mid);
+  border-radius: 8px;
+  font-family: 'Jost', sans-serif;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  background: var(--white);
+  color: var(--navy);
+  letter-spacing: 0.3px;
+  transition: background 0.15s;
+}
+.btn-share:active { background: var(--cream); }
+
+/* ============ TOAST ============ */
+.toast {
+  position: fixed; bottom: 88px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--navy);
+  color: var(--white);
+  padding: 11px 22px; border-radius: 50px;
+  font-size: 12.5px; font-weight: 500;
+  z-index: 900; white-space: nowrap;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transition: opacity 0.25s, transform 0.25s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ============ BOTTOM NAV ============ */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  max-width: 560px; margin: 0 auto;
+  background: var(--white);
+  border-top: 1px solid var(--line);
+  display: flex;
+  box-shadow: 0 -2px 16px rgba(15,31,61,0.08);
+  z-index: 400;
+}
+.nav-btn {
+  flex: 1; padding: 10px 4px 8px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+  cursor: pointer; border: none;
+  background: none; transition: background 0.15s;
+}
+.nav-btn:active { background: var(--cream); }
+.nav-btn svg { width: 22px; height: 22px; opacity: 0.35; transition: opacity 0.15s; }
+.nav-btn span {
+  font-family: 'Jost', sans-serif;
+  font-size: 9.5px; font-weight: 600;
+  letter-spacing: 0.8px; text-transform: uppercase;
+  color: var(--muted);
+}
+.nav-btn.active svg { opacity: 1; }
+.nav-btn.active span { color: var(--navy); }
+
+/* ============ SECTION INFO (config) ============ */
+.info-row {
+  display: flex; align-items: flex-start;
+  gap: 12px; padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+}
+.info-row:last-child { border-bottom: none; }
+.info-key {
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: 0.8px; text-transform: uppercase;
+  color: var(--muted); min-width: 110px; padding-top: 1px;
+}
+.info-val { font-size: 13.5px; color: var(--ink); line-height: 1.4; }
+</style>
+</head>
+<body>
+
+<!-- ===== SPLASH ===== -->
+<div id="splash">
+  <div class="splash-logo-wrap">
+    <img src="assets/recibo_chimpay.jpg" alt="Logo" onerror="this.parentElement.innerHTML='<div class=\'splash-logo-placeholder\'>IC</div>'">
+  </div>
+  <div class="splash-text">
+    <h1>Iván Chimpay<br>y Asociados</h1>
+    <p>Consultorio Jurídico</p>
+  </div>
+  <div class="splash-bar"><div class="splash-bar-inner"></div></div>
+</div>
+
+<!-- ===== HEADER ===== -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-logo">
+        <img src="assets/recibo_chimpay.jpg" alt="Logo"
+          onerror="this.parentElement.innerHTML='<div class=\'brand-logo-placeholder\'>IC</div>'">
+      </div>
+      <div class="brand-info">
+        <h1>Iván Chimpay y Asociados</h1>
+        <p>Consultorio Jurídico</p>
+      </div>
+    </div>
+    <button class="btn-nuevo" onclick="irNuevo()">+ Nuevo</button>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('nuevo',0)">Nuevo</div>
+    <div class="tab" onclick="switchTab('historial',1)">Historial</div>
+    <div class="tab" onclick="switchTab('estudio',2)">Estudio</div>
+  </div>
+</header>
+
+<!-- ===== MAIN ===== -->
+<main class="main">
+
+  <!-- PANEL NUEVO -->
+  <div class="panel active" id="panel-nuevo">
+
+    <div class="recibo-badge">
+      <span class="label">Numero de Recibo</span>
+      <span class="num" id="recibo-num-display">#00001</span>
+    </div>
+
+    <!-- Cliente -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head-line"></div>
+        <h2>Datos del Cliente</h2>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>Nombre completo *</label>
+          <input type="text" id="f-nombre" placeholder="Nombre completo del cliente" autocomplete="name">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>DNI / RUC</label>
+            <input type="text" id="f-dni" placeholder="N° de documento" inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label>Celular</label>
+            <input type="tel" id="f-tel" placeholder="+51 9...">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Correo electronico</label>
+          <input type="email" id="f-email" placeholder="correo@mail.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label>Domicilio del cliente</label>
+          <input type="text" id="f-domicilio" placeholder="Direccion del cliente">
+        </div>
+      </div>
+    </div>
+
+    <!-- Servicio -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head-line"></div>
+        <h2>Detalle del Servicio</h2>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>Concepto / Servicio *</label>
+          <select id="f-concepto">
+            <option value="">— Seleccionar concepto —</option>
+            <option>Honorarios profesionales</option>
+            <option>Consulta juridica</option>
+            <option>Redaccion de contrato</option>
+            <option>Representacion judicial</option>
+            <option>Asesoria legal</option>
+            <option>Tramite notarial</option>
+            <option>Mediacion extrajudicial</option>
+            <option>Estudio de expediente</option>
+            <option>Demanda civil</option>
+            <option>Defensa penal</option>
+            <option>Tramite administrativo</option>
+            <option>Anticipo de honorarios</option>
+            <option>Cuota de plan de pago</option>
+            <option>Otro (ver descripcion)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Descripcion / Expediente / Causa</label>
+          <textarea id="f-descripcion" placeholder="Ej: Expediente N° 1234-2024-JUZG. Caso Lopez vs. Martinez por desalojo."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Fecha de emision *</label>
+            <input type="date" id="f-fecha">
+          </div>
+          <div class="form-group">
+            <label>Fecha de vencimiento</label>
+            <input type="date" id="f-vencimiento">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pago -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head-line"></div>
+        <h2>Informacion de Pago</h2>
+      </div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Moneda</label>
+            <select id="f-moneda" onchange="updateAmount()">
+              <option value="PEN">S/ — Soles</option>
+              <option value="USD">$ — Dolares</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Monto *</label>
+            <input type="number" id="f-monto" placeholder="0.00" step="0.01" min="0" inputmode="decimal" oninput="updateAmount()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Forma de pago</label>
+            <select id="f-forma">
+              <option>Efectivo</option>
+              <option>Transferencia bancaria</option>
+              <option>Deposito bancario</option>
+              <option>Cheque</option>
+              <option>Yape</option>
+              <option>Plin</option>
+              <option>Tarjeta de debito</option>
+              <option>Tarjeta de credito</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Estado del pago</label>
+            <select id="f-estado">
+              <option value="pagado">Pagado</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="parcial">Pago parcial</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Referencia / N° operacion</label>
+          <input type="text" id="f-ref" placeholder="N° de operacion o referencia">
+        </div>
+        <div class="amount-box">
+          <div class="lbl">Total a pagar</div>
+          <div class="val"><span class="curr" id="disp-curr">S/</span><span id="disp-val">0.00</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Observaciones -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head-line"></div>
+        <h2>Observaciones</h2>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <textarea id="f-obs" placeholder="Notas adicionales, condiciones, aclaraciones..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="generarRecibo()">Generar Recibo PDF</button>
+    <button class="btn btn-secondary" onclick="limpiarForm()">Limpiar formulario</button>
+
+  </div>
+
+  <!-- PANEL HISTORIAL -->
+  <div class="panel" id="panel-historial">
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="s-val" id="stat-count">0</div>
+        <div class="s-lbl">Recibos emitidos</div>
+      </div>
+      <div class="stat-box">
+        <div class="s-val" id="stat-soles">S/ 0</div>
+        <div class="s-lbl">Total en soles</div>
+      </div>
+    </div>
+    <div id="history-list"></div>
+  </div>
+
+  <!-- PANEL ESTUDIO -->
+  <div class="panel" id="panel-estudio">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head-line"></div>
+        <h2>Informacion del Consultorio</h2>
+      </div>
+      <div class="card-body">
+        <div class="info-row">
+          <div class="info-key">Razón Social</div>
+          <div class="info-val">Iván Chimpay y Asociados<br><span style="font-size:11px;color:var(--muted);">Consultorio Juridico</span></div>
+        </div>
+        <div class="info-row">
+          <div class="info-key">Responsable</div>
+          <div class="info-val">Dr. Iván Chimpay Prado</div>
+        </div>
+        <div class="info-row">
+          <div class="info-key">CAL / Matricula</div>
+          <div class="info-val" id="edit-matricula">N° _____</div>
+        </div>
+        <div class="info-row">
+          <div class="info-key">Especialidad</div>
+          <div class="info-val" id="edit-especialidad">Derecho Civil y Comercial</div>
+        </div>
+        <div class="info-row">
+          <div class="info-key">Dirección</div>
+          <div class="info-val" id="edit-direccion">—</div>
+        </div>
+        <div class="info-row">
+          <div class="info-key">Celular</div>
+          <div class="info-val" id="edit-celular">—</div>
+        </div>
+        <div class="info-row">
+          <div class="info-key">Correo</div>
+          <div class="info-val" id="edit-correo">—</div>
+        </div>
+        <div class="info-row">
+          <div class="info-key">Página web</div>
+          <div class="info-val" id="edit-web">—</div>
+        </div>
+        <div class="info-row">
+          <div class="info-key">RUC</div>
+          <div class="info-val" id="edit-ruc">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head-line"></div>
+        <h2>Editar datos del consultorio</h2>
+      </div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>Matricula CAL</label>
+          <input type="text" id="c-matricula" placeholder="Ej: CAL N° 12345">
+        </div>
+        <div class="form-group">
+          <label>Especialidad</label>
+          <input type="text" id="c-especialidad" placeholder="Ej: Derecho Civil y Comercial">
+        </div>
+        <div class="form-group">
+          <label>Direccion de oficina</label>
+          <input type="text" id="c-dir" placeholder="Ej: Jr. de la Union 1234, Of. 301">
+        </div>
+        <div class="form-group">
+          <label>Distrito / Ciudad</label>
+          <input type="text" id="c-ciudad" placeholder="Ej: Lima — Lima">
+        </div>
+        <div class="form-group">
+          <label>Celular / Telefono</label>
+          <input type="tel" id="c-cel" placeholder="+51 987 654 321">
+        </div>
+        <div class="form-group">
+          <label>Correo electronico</label>
+          <input type="email" id="c-email" placeholder="consultas@chimpay.pe">
+        </div>
+        <div class="form-group">
+          <label>Pagina web</label>
+          <input type="text" id="c-web" placeholder="www.chimpay.pe">
+        </div>
+        <div class="form-group">
+          <label>RUC</label>
+          <input type="text" id="c-ruc" placeholder="N° RUC">
+        </div>
+        <div class="form-group">
+          <label>Cuenta bancaria / CCI</label>
+          <input type="text" id="c-cuenta" placeholder="BCP — CCI: 002...">
+        </div>
+        <div class="form-group">
+          <label>N° de Yape / Plin</label>
+          <input type="text" id="c-yape" placeholder="+51 987 654 321">
+        </div>
+        <div class="form-group">
+          <label>Numero inicial de recibos</label>
+          <input type="number" id="c-inicio" placeholder="1" min="1">
+        </div>
+        <button class="btn btn-primary" onclick="guardarEstudio()">Guardar datos</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head-line"></div>
+        <h2>Gestion de datos</h2>
+      </div>
+      <div class="card-body">
+        <button class="btn btn-danger" onclick="borrarRecibos()">Eliminar todos los recibos</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="closeOverlay(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Recibo generado</div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <div class="modal-summary" id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()" style="margin:0">Cerrar</button>
+      <button class="btn btn-primary" onclick="descargarPDF()" style="margin:0">Descargar PDF</button>
+    </div>
+    <!-- SHARE ROW — solo visible si Web Share API disponible -->
+    <button class="btn btn-share" id="btn-share" onclick="compartirPDF()" style="display:none; margin-top:10px;">
+      Compartir PDF
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="switchTab('nuevo',0)" id="nav0">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#0f1f3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/>
+    </svg>
+    <span>Nuevo</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('historial',1)" id="nav1">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#0f1f3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+      <polyline points="14 2 14 8 20 8"/>
+      <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+      <polyline points="10 9 9 9 8 9"/>
+    </svg>
+    <span>Historial</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('estudio',2)" id="nav2">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#0f1f3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+      <polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+    <span>Estudio</span>
+  </button>
+</nav>
+
+<script>
+// =============================================
+//  STATE
+// =============================================
+let estudio = {};
+let recibos = [];
+let currentRecibo = null;
+let counter = 1;
+
+// =============================================
+//  BOOT
+// =============================================
+window.addEventListener('DOMContentLoaded', () => {
+  cargarDatos();
+  setHoy();
+  updateReciboNum();
+  renderHistorial();
+  updateStats();
+  cargarEstudioUI();
+  setTimeout(() => { document.getElementById('splash').classList.add('hidden'); }, 2200);
+});
+
+function setHoy() {
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('f-fecha').value = hoy;
+}
+
+// =============================================
+//  NAVIGATION
+// =============================================
+let currentTab = 'nuevo';
+function switchTab(name, idx) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  document.getElementById('nav' + idx).classList.add('active');
+  currentTab = name;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function irNuevo() { switchTab('nuevo', 0); }
+
+// =============================================
+//  AMOUNT
+// =============================================
+function updateAmount() {
+  const v = parseFloat(document.getElementById('f-monto').value) || 0;
+  const m = document.getElementById('f-moneda').value;
+  document.getElementById('disp-curr').textContent = m === 'PEN' ? 'S/' : '$';
+  document.getElementById('disp-val').textContent = v.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// =============================================
+//  RECIBO NUMBER
+// =============================================
+function updateReciboNum() {
+  document.getElementById('recibo-num-display').textContent = '#' + String(counter).padStart(5, '0');
+}
+
+// =============================================
+//  GENERATE
+// =============================================
+function generarRecibo() {
+  const nombre = document.getElementById('f-nombre').value.trim();
+  const concepto = document.getElementById('f-concepto').value;
+  const monto = document.getElementById('f-monto').value;
+
+  if (!nombre) { toast('Complete el nombre del cliente'); return; }
+  if (!concepto) { toast('Seleccione el concepto'); return; }
+  if (!monto || parseFloat(monto) <= 0) { toast('Ingrese el monto a cobrar'); return; }
+
+  const moneda = document.getElementById('f-moneda').value;
+  const symbol = moneda === 'PEN' ? 'S/' : '$';
+  const num = String(counter).padStart(5, '0');
+
+  currentRecibo = {
+    id: Date.now(),
+    numero: num,
+    fecha: document.getElementById('f-fecha').value,
+    vencimiento: document.getElementById('f-vencimiento').value,
+    generadoEn: new Date().toISOString(),
+    nombre,
+    dni: document.getElementById('f-dni').value.trim(),
+    tel: document.getElementById('f-tel').value.trim(),
+    email: document.getElementById('f-email').value.trim(),
+    domicilio: document.getElementById('f-domicilio').value.trim(),
+    concepto,
+    descripcion: document.getElementById('f-descripcion').value.trim(),
+    monto: parseFloat(monto),
+    moneda, symbol,
+    forma: document.getElementById('f-forma').value,
+    estado: document.getElementById('f-estado').value,
+    ref: document.getElementById('f-ref').value.trim(),
+    obs: document.getElementById('f-obs').value.trim(),
+    estudio: { ...estudio }
+  };
+
+  const eLabel = { pagado: 'Pagado', pendiente: 'Pendiente', parcial: 'Pago parcial' };
+  document.getElementById('modal-sub').textContent = `Recibo N° ${num}  —  ${fmtDate(currentRecibo.fecha)}`;
+  document.getElementById('modal-body').innerHTML = `
+    <strong>Cliente:</strong> ${nombre}<br>
+    ${currentRecibo.dni ? `<strong>DNI / RUC:</strong> ${currentRecibo.dni}<br>` : ''}
+    <strong>Concepto:</strong> ${concepto}<br>
+    ${currentRecibo.descripcion ? `<strong>Detalle:</strong> ${currentRecibo.descripcion}<br>` : ''}
+    <strong>Forma de pago:</strong> ${currentRecibo.forma}<br>
+    <strong>Estado:</strong> ${eLabel[currentRecibo.estado]}<br>
+    <hr class="summary-divider">
+    <span style="font-size:16px;font-family:'Cormorant Garamond',serif;font-weight:700;color:var(--navy);">
+      TOTAL: ${symbol} ${currentRecibo.monto.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+    </span>
+  `;
+
+  // Mostrar boton compartir si Web Share API disponible
+  const btnShare = document.getElementById('btn-share');
+  if (navigator.share) {
+    btnShare.style.display = 'block';
+  } else {
+    btnShare.style.display = 'none';
+  }
+
+  document.getElementById('overlay').classList.add('open');
+}
+
+// =============================================
+//  PDF PROFESSIONAL
+// =============================================
+function descargarPDF() {
+  if (!currentRecibo) return;
+  closeModal();
+
+  // Save
+  recibos.unshift(currentRecibo);
+  localStorage.setItem('chimpay_recibos', JSON.stringify(recibos));
+  counter++;
+  if (estudio.inicio) localStorage.setItem('chimpay_counter', String(counter));
+  else localStorage.setItem('chimpay_counter', String(counter));
+  updateReciboNum();
+  renderHistorial();
+  updateStats();
+
+  toast('Generando PDF...');
+  setTimeout(() => buildPDF(currentRecibo), 350);
+}
+
+// =============================================
+//  PDF BUILDER — COMPLETO CORREGIDO
+// =============================================
+function getPDFDoc(r) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ format: 'a4', unit: 'mm' });
+  const PW = 210, PH = 297;
+  const ML = 16, MR = 16;
+  const CW = PW - ML - MR;
+
+  const NAVY    = [15,  31,  61];
+  const NAVYMID = [26,  51,  96];
+  const GOLD    = [160, 120, 48];
+  const GOLDLT  = [196, 154, 72];
+  const CREAM   = [247, 245, 240];
+  const WHITE   = [255, 255, 255];
+  const DARK    = [30,  30,  30];
+  const MUTED   = [105, 112, 125];
+  const LINE    = [218, 213, 200];
+
+  const e = r.estudio || {};
+  const now = r.generadoEn ? new Date(r.generadoEn) : new Date();
+  const fechaHoraStr = fmtDate(r.fecha) + '  —  ' +
+    now.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+
+  // ============================================================
+  //  HELPERS
+  // ============================================================
+  const secBar = (title, y) => {
+    doc.setFillColor(...NAVYMID);
+    doc.rect(ML, y, CW, 7.5, 'F');
+    doc.setFillColor(...GOLD);
+    doc.rect(ML, y, 3, 7.5, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7);
+    doc.setTextColor(...WHITE);
+    doc.text(title, ML + 6, y + 5.2);
+    return y + 10;
+  };
+
+  const box = (y, h) => {
+    doc.setFillColor(...CREAM);
+    doc.roundedRect(ML, y, CW, h, 2, 2, 'F');
+    doc.setDrawColor(...LINE);
+    doc.setLineWidth(0.25);
+    doc.roundedRect(ML, y, CW, h, 2, 2, 'S');
+  };
+
+  const fld = (lbl, val, x, y, maxW) => {
+    const v = val ? String(val).trim() : '';
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.2);
+    doc.setTextColor(...MUTED);
+    doc.text(lbl.toUpperCase(), x, y);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...DARK);
+    if (v) {
+      const lines = doc.splitTextToSize(v, maxW);
+      doc.text(lines, x, y + 4.8);
+      return y + 4.8 + lines.length * 4.2;
+    } else {
+      doc.setTextColor(...MUTED);
+      doc.text('—', x, y + 4.8);
+      return y + 9;
+    }
+  };
+
+  const drawFooter = () => {
+    const FY = PH - 18;
+    doc.setFillColor(...NAVY);
+    doc.rect(0, FY, PW, 18, 'F');
+    doc.setFillColor(...GOLD);
+    doc.rect(0, FY, PW, 1.5, 'F');
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(6.5);
+    doc.setTextColor(170, 190, 220);
+    doc.text(
+      'El presente recibo es comprobante valido de pago de honorarios profesionales. Iván Chimpay y Asociados — Consultorio Juridico.',
+      PW / 2, FY + 7, { align: 'center' }
+    );
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...GOLDLT);
+    doc.text(
+      `Recibo N° ${r.numero}  •  Emitido: ${fechaHoraStr}  •  Iván Chimpay y Asociados`,
+      PW / 2, FY + 13, { align: 'center' }
+    );
+  };
+
+  // ============================================================
+  //  HEADER — caja recibo con altura FIJA más grande
+  // ============================================================
+  const HDR_H = 72; // aumentado para que quepa todo
+  doc.setFillColor(...NAVY);
+  doc.rect(0, 0, PW, HDR_H, 'F');
+  doc.setFillColor(...GOLD);
+  doc.rect(0, 0, PW, 2.5, 'F');
+  doc.setFillColor(...GOLDLT);
+  doc.rect(0, HDR_H - 1.5, PW, 1.5, 'F');
+
+  // Logo
+  const LOGO_S = 42, LOGO_X = ML, LOGO_Y = (HDR_H - LOGO_S) / 2;
+  const logoImg = document.querySelector('.brand-logo img');
+  let logoLoaded = false;
+  if (logoImg && logoImg.naturalWidth > 0) {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = logoImg.naturalWidth;
+      canvas.height = logoImg.naturalHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(logoImg, 0, 0);
+      const dataURL = canvas.toDataURL('image/jpeg', 0.95);
+      doc.setFillColor(...NAVYMID);
+      doc.roundedRect(LOGO_X, LOGO_Y, LOGO_S, LOGO_S, 4, 4, 'F');
+      const PAD = 1.5;
+      doc.addImage(dataURL, 'JPEG', LOGO_X + PAD, LOGO_Y + PAD, LOGO_S - PAD * 2, LOGO_S - PAD * 2);
+      doc.setDrawColor(...NAVYMID);
+      doc.setLineWidth(PAD * 2 + 0.5);
+      doc.roundedRect(LOGO_X, LOGO_Y, LOGO_S, LOGO_S, 4, 4, 'S');
+      doc.setDrawColor(...GOLDLT);
+      doc.setLineWidth(0.7);
+      doc.roundedRect(LOGO_X, LOGO_Y, LOGO_S, LOGO_S, 4, 4, 'S');
+      logoLoaded = true;
+    } catch(err) { logoLoaded = false; }
+  }
+  if (!logoLoaded) {
+    doc.setFillColor(...NAVYMID);
+    doc.roundedRect(LOGO_X, LOGO_Y, LOGO_S, LOGO_S, 4, 4, 'F');
+    doc.setDrawColor(...GOLDLT);
+    doc.setLineWidth(0.7);
+    doc.roundedRect(LOGO_X, LOGO_Y, LOGO_S, LOGO_S, 4, 4, 'S');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.setTextColor(...GOLDLT);
+    doc.text('IC', LOGO_X + LOGO_S / 2, LOGO_Y + LOGO_S / 2 + 2, { align: 'center' });
+  }
+
+  // Texto del estudio (columna central — CENTRADO)
+  const BOX_W = 50;
+  const BOX_X = PW - MR - BOX_W;
+  const TXT_X = LOGO_X + LOGO_S + 8;
+  const TXT_W = BOX_X - TXT_X - 6;
+  const TXT_CX = TXT_X + TXT_W / 2; // centro del área de texto
+
+  let cy = 10;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13.5);
+  doc.setTextColor(...WHITE);
+  doc.text('IVÁN CHIMPAY Y ASOCIADOS', TXT_CX, cy, { align: 'center' });
+  cy += 5.5;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(...GOLDLT);
+  doc.text('CONSULTORIO JURÍDICO', TXT_CX, cy, { align: 'center' });
+  cy += 6;
+  doc.setDrawColor(255, 255, 255, 0.15);
+  doc.setLineWidth(0.3);
+  doc.line(TXT_X, cy, TXT_X + TXT_W, cy);
+  cy += 4.5;
+
+  doc.setFontSize(7.5);
+  const infoLine = (label, val) => {
+    if (!val) return;
+    // Combina label + valor en una sola línea centrada
+    const fullText = label + ' ' + val;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(210, 225, 245);
+    const lines = doc.splitTextToSize(fullText, TXT_W);
+    lines.forEach(line => {
+      // Resalta la etiqueta en cada línea de forma simple: toda la línea en color claro
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(210, 225, 245);
+      doc.text(line, TXT_CX, cy, { align: 'center' });
+      cy += 5;
+    });
+  };
+
+  const dirFull = [e.dir, e.ciudad].filter(Boolean).join(' — ') || 'Lima, Peru';
+  infoLine('Direccion:', dirFull);
+  infoLine('Celular:', e.cel || '');
+  infoLine('Correo:', e.email || '');
+  infoLine('Web:', e.web || '');
+  if (e.ruc)       infoLine('RUC:', e.ruc);
+  if (e.matricula) infoLine('CAL N°:', e.matricula);
+
+  // ============================================================
+  //  CAJA RECIBO — altura aumentada, elementos con posición fija
+  // ============================================================
+  const BOX_H = 52; // más alta para que quepa todo sin solaparse
+  const BOX_Y = (HDR_H - BOX_H) / 2;
+
+  doc.setFillColor(...GOLD);
+  doc.roundedRect(BOX_X, BOX_Y, BOX_W, BOX_H, 3, 3, 'F');
+  doc.setDrawColor(...NAVY);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(BOX_X + 1, BOX_Y + 1, BOX_W - 2, BOX_H - 2, 2.5, 2.5, 'S');
+
+  // "RECIBO DE PAGO" — etiqueta superior
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...NAVY);
+  doc.text('RECIBO DE PAGO', BOX_X + BOX_W / 2, BOX_Y + 8, { align: 'center' });
+
+  // Número grande
+  doc.setFontSize(20);
+  doc.text('#' + r.numero, BOX_X + BOX_W / 2, BOX_Y + 19, { align: 'center' });
+
+  // Fecha de emisión
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(6.5);
+  doc.text(fmtDate(r.fecha), BOX_X + BOX_W / 2, BOX_Y + 27, { align: 'center' });
+
+  // Vencimiento — posición fija, sin solaparse con fecha
+  if (r.vencimiento) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(5.8);
+    doc.setTextColor(30, 20, 5);
+    doc.text('VENCE: ' + fmtDate(r.vencimiento), BOX_X + BOX_W / 2, BOX_Y + 34, { align: 'center' });
+  }
+
+  // Badge de estado — justo debajo del texto VENCE (o de la fecha si no hay vencimiento)
+  const estadoTx  = { pagado: 'PAGADO', pendiente: 'PENDIENTE', parcial: 'PAGO PARCIAL' };
+  const estadoBg  = { pagado: [26,102,64], pendiente: [30,60,140], parcial: [138,26,26] };
+  const eBg = estadoBg[r.estado] || NAVYMID;
+  const BADGE_H = 10;
+  // Si hay vencimiento el último texto quedó en BOX_Y+34, si no en BOX_Y+27
+  const BADGE_Y = r.vencimiento ? BOX_Y + 37 : BOX_Y + 30;
+  doc.setFillColor(...eBg);
+  doc.roundedRect(BOX_X + 4, BADGE_Y, BOX_W - 8, BADGE_H, 2, 2, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6.5);
+  doc.setTextColor(...WHITE);
+  doc.text(estadoTx[r.estado] || '', BOX_X + BOX_W / 2, BADGE_Y + 6.5, { align: 'center' });
+
+  // ============================================================
+  //  BODY — con gestión de página
+  // ============================================================
+  const FOOTER_H = 18;
+  const CONTENT_BOTTOM = PH - FOOTER_H - 6; // límite inferior del contenido
+
+  // Agrega nueva página si Y está cerca del límite
+  const checkPage = (y, neededHeight) => {
+    if (y + neededHeight > CONTENT_BOTTOM) {
+      drawFooter();
+      doc.addPage();
+      drawFooter();
+      return 16; // Y inicial en nueva página
+    }
+    return y;
+  };
+
+  let Y = HDR_H + 8;
+
+  // ---- DATOS DEL CLIENTE ----
+  const domLines = doc.splitTextToSize(r.domicilio || '—', CW / 3 - 6);
+  const clientH = 32;
+  Y = checkPage(Y, 10 + clientH);
+  Y = secBar('DATOS DEL CLIENTE', Y);
+  box(Y, clientH);
+
+  const COL1 = ML + 4;
+  const COL2 = ML + CW / 2 + 2;
+  const HALF = CW / 2 - 8;
+
+  let fy = Y + 5.5;
+  fld('Nombre completo', r.nombre, COL1, fy, HALF + 10);
+  fld('DNI / RUC', r.dni, COL2, fy, HALF - 4);
+  fy += 13;
+  fld('Celular', r.tel, COL1, fy, CW / 3 - 4);
+  fld('Correo electronico', r.email, COL1 + CW / 3, fy, CW / 3 - 4);
+  fld('Domicilio', r.domicilio, COL2 + CW / 6 - 2, fy, CW / 3 - 6);
+  Y += clientH + 6;
+
+  // ---- DETALLE DEL SERVICIO ----
+  const descLines = r.descripcion ? doc.splitTextToSize(r.descripcion, CW - 10) : [];
+  const svcH = 12 + (r.descripcion ? 11 + descLines.length * 4.2 : 0) + 4;
+  const svcHFinal = Math.max(svcH, 22);
+  Y = checkPage(Y, 10 + svcHFinal);
+  Y = secBar('DETALLE DEL SERVICIO', Y);
+  box(Y, svcHFinal);
+
+  fy = Y + 5.5;
+  fld('Concepto / Servicio', r.concepto, COL1, fy, CW - 8);
+  fy += 12;
+  if (r.descripcion) {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.2);
+    doc.setTextColor(...MUTED);
+    doc.text('EXPEDIENTE / DESCRIPCIÓN', COL1, fy);
+    fy += 5;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...DARK);
+    doc.text(descLines, COL1, fy);
+  }
+  Y += svcHFinal + 6;
+
+  // ---- INFORMACION DE PAGO ----
+  Y = checkPage(Y, 10 + 30);
+  Y = secBar('INFORMACIÓN DE PAGO', Y);
+  box(Y, 30);
+
+  const COL3 = ML + CW * 0.36;
+  const COL4 = ML + CW * 0.62;
+  fy = Y + 5.5;
+  fld('Forma de pago',   r.forma,           COL1, fy, CW * 0.33);
+  fld('Fecha de pago',   fmtDate(r.fecha),  COL3, fy, CW * 0.24);
+  fld('Vencimiento',     r.vencimiento ? fmtDate(r.vencimiento) : '—', COL4, fy, CW * 0.24);
+  fy += 13;
+  fld('N° Operación / Referencia', r.ref || '—', COL1, fy, CW * 0.55);
+  Y += 36;
+
+  // ---- MONTO TOTAL ----
+  Y = checkPage(Y, 40);
+  Y += 4;
+  doc.setDrawColor(...GOLDLT);
+  doc.setLineWidth(0.8);
+  doc.line(ML, Y, PW - MR, Y);
+  Y += 6;
+
+  const TBW = 110, TBH = 26;
+  const TBX = (PW - TBW) / 2;
+  doc.setFillColor(...NAVY);
+  doc.roundedRect(TBX, Y, TBW, TBH, 3, 3, 'F');
+  doc.setDrawColor(...GOLDLT);
+  doc.setLineWidth(0.6);
+  doc.roundedRect(TBX, Y, TBW, TBH, 3, 3, 'S');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(...GOLDLT);
+  doc.text('TOTAL A PAGAR', PW / 2, Y + 8, { align: 'center' });
+  doc.setFontSize(19);
+  doc.setTextColor(...WHITE);
+  doc.text(
+    `${r.symbol} ${r.monto.toLocaleString('es-PE', { minimumFractionDigits: 2 })}`,
+    PW / 2, Y + 20, { align: 'center' }
+  );
+  Y += TBH + 5;
+
+  // Monto en letras
+  Y = checkPage(Y, 10);
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...MUTED);
+  doc.text('Son: ' + numToWords(r.monto, r.moneda), PW / 2, Y, { align: 'center' });
+  Y += 8;
+
+  // ---- OBSERVACIONES ----
+  if (r.obs) {
+    const obsLines = doc.splitTextToSize(r.obs, CW - 10);
+    const obsH = obsLines.length * 4.5 + 13;
+    Y = checkPage(Y, obsH + 4);
+    Y += 2;
+    doc.setFillColor(238, 242, 252);
+    doc.roundedRect(ML, Y, CW, obsH, 2, 2, 'F');
+    doc.setDrawColor(...LINE);
+    doc.setLineWidth(0.25);
+    doc.roundedRect(ML, Y, CW, obsH, 2, 2, 'S');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.2);
+    doc.setTextColor(...MUTED);
+    doc.text('OBSERVACIONES', ML + 5, Y + 6);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...DARK);
+    doc.text(obsLines, ML + 5, Y + 11.5);
+    Y += obsH + 6;
+  }
+
+  // ---- DATOS DE PAGO DIGITAL ----
+  if (e.cuenta || e.yape) {
+    const bankH = 8 + (e.cuenta ? 6 : 0) + (e.yape ? 6 : 0) + 6;
+    Y = checkPage(Y, bankH + 4);
+    Y += 2;
+    doc.setFillColor(245, 243, 235);
+    doc.roundedRect(ML, Y, CW, bankH, 2, 2, 'F');
+    doc.setDrawColor(...LINE);
+    doc.setLineWidth(0.25);
+    doc.roundedRect(ML, Y, CW, bankH, 2, 2, 'S');
+    doc.setFillColor(...GOLD);
+    doc.rect(ML, Y, 3, bankH, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(6.5);
+    doc.setTextColor(...NAVY);
+    doc.text('DATOS PARA TRANSFERENCIAS Y PAGOS DIGITALES', ML + 6, Y + 7);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8.5);
+    doc.setTextColor(...DARK);
+    let by = Y + 13;
+    if (e.cuenta) { doc.text('Cuenta bancaria / CCI:  ' + e.cuenta, ML + 6, by); by += 6; }
+    if (e.yape)   { doc.text('Yape / Plin:  ' + e.yape, ML + 6, by); }
+    Y += bankH + 6;
+  }
+
+  // ---- FIRMA ----
+  const SIG_H = 22;
+  Y = checkPage(Y, SIG_H + 8);
+  Y += 6;
+  const sigW = 72, sigX = (PW - sigW) / 2;
+  doc.setDrawColor(...LINE);
+  doc.setLineWidth(0.6);
+  doc.line(sigX, Y, sigX + sigW, Y);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...NAVY);
+  doc.text('Dr. Iván Chimpay Prado', PW / 2, Y + 8, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...MUTED);
+  const sigLegend = 'Abogado  —  ' + (e.matricula ? 'CAL N° ' + e.matricula : 'Ivan Chimpay y Asociados');
+  doc.text(sigLegend, PW / 2, Y + 15, { align: 'center' });
+
+  // ---- FOOTER en última página ----
+  drawFooter();
+
+  return doc;
+}
+
+function buildPDF(r) {
+  const doc = getPDFDoc(r);
+  const filename = `Recibo_${r.numero}_${r.nombre.replace(/\s+/g, '_')}.pdf`;
+  doc.save(filename);
+  toast('PDF descargado correctamente');
+}
+
+// =============================================
+//  COMPARTIR PDF (Web Share API)
+// =============================================
+async function compartirPDF() {
+  if (!currentRecibo) return;
+  toast('Preparando para compartir...');
+
+  try {
+    const doc = getPDFDoc(currentRecibo);
+    const filename = `Recibo_${currentRecibo.numero}_${currentRecibo.nombre.replace(/\s+/g, '_')}.pdf`;
+    const pdfBlob = doc.output('blob');
+    const file = new File([pdfBlob], filename, { type: 'application/pdf' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: 'Recibo N° ' + currentRecibo.numero + ' — Ivan Chimpay y Asociados',
+        text: `Recibo de pago por ${currentRecibo.symbol} ${currentRecibo.monto.toLocaleString('es-PE', { minimumFractionDigits: 2 })} a nombre de ${currentRecibo.nombre}`,
+        files: [file]
+      });
+      toast('Recibo compartido');
+    } else if (navigator.share) {
+      // Fallback: compartir sin archivo (solo texto)
+      await navigator.share({
+        title: 'Recibo N° ' + currentRecibo.numero,
+        text: `Recibo de pago — Ivan Chimpay y Asociados\nCliente: ${currentRecibo.nombre}\nMonto: ${currentRecibo.symbol} ${currentRecibo.monto.toLocaleString('es-PE', { minimumFractionDigits: 2 })}\nConcepto: ${currentRecibo.concepto}`
+      });
+      toast('Compartido. Descarga el PDF para adjuntarlo.');
+    } else {
+      // Si no hay Web Share API (escritorio), hacer descarga normal
+      buildPDF(currentRecibo);
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      buildPDF(currentRecibo);
+    }
+  }
+}
+
+// =============================================
+//  HISTORIAL
+// =============================================
+function renderHistorial() {
+  const el = document.getElementById('history-list');
+  if (!recibos.length) {
+    el.innerHTML = `
+      <div class="empty">
+        <div class="e-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0f1f3d" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </div>
+        <p>No hay recibos emitidos.<br>Genera tu primer recibo.</p>
+      </div>`;
+    return;
+  }
+  const eClass = { pagado: 'e-pagado', pendiente: 'e-pendiente', parcial: 'e-parcial' };
+  const eLabel = { pagado: 'Pagado', pendiente: 'Pendiente', parcial: 'Pago parcial' };
+  el.innerHTML = recibos.map((r, i) => `
+    <div class="history-item" onclick="verRecibo(${i})">
+      <div class="h-info">
+        <div class="h-name">${r.nombre}</div>
+        <div class="h-concept">${r.concepto}</div>
+        <div class="h-date">${fmtDate(r.fecha)} &nbsp;·&nbsp; ${r.forma}</div>
+      </div>
+      <div class="h-right">
+        <div class="h-amount">${r.symbol}&nbsp;${r.monto.toLocaleString('es-PE', { minimumFractionDigits: 2 })}</div>
+        <div class="h-num">#${r.numero}</div>
+        <div class="estado-pill ${eClass[r.estado]}">${eLabel[r.estado]}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function verRecibo(i) {
+  currentRecibo = recibos[i];
+  const r = currentRecibo;
+  const eLabel = { pagado: 'Pagado', pendiente: 'Pendiente', parcial: 'Pago parcial' };
+  document.getElementById('modal-sub').textContent = `Recibo N° ${r.numero}  —  ${fmtDate(r.fecha)}`;
+  document.getElementById('modal-body').innerHTML = `
+    <strong>Cliente:</strong> ${r.nombre}<br>
+    ${r.dni ? `<strong>DNI / RUC:</strong> ${r.dni}<br>` : ''}
+    <strong>Concepto:</strong> ${r.concepto}<br>
+    ${r.descripcion ? `<strong>Detalle:</strong> ${r.descripcion}<br>` : ''}
+    <strong>Forma de pago:</strong> ${r.forma}<br>
+    <strong>Estado:</strong> ${eLabel[r.estado]}<br>
+    <hr class="summary-divider">
+    <span style="font-size:16px;font-family:'Cormorant Garamond',serif;font-weight:700;color:var(--navy);">
+      TOTAL: ${r.symbol} ${r.monto.toLocaleString('es-PE', { minimumFractionDigits: 2 })}
+    </span>
+  `;
+  document.getElementById('overlay').classList.add('open');
+  const btnShare = document.getElementById('btn-share');
+  btnShare.style.display = navigator.share ? 'block' : 'none';
+}
+
+function updateStats() {
+  document.getElementById('stat-count').textContent = recibos.length;
+  const tot = recibos.filter(r => r.moneda === 'PEN').reduce((s, r) => s + r.monto, 0);
+  document.getElementById('stat-soles').textContent = 'S/ ' + tot.toLocaleString('es-PE', { maximumFractionDigits: 2 });
+}
+
+// =============================================
+//  ESTUDIO CONFIG
+// =============================================
+function guardarEstudio() {
+  estudio = {
+    matricula: document.getElementById('c-matricula').value.trim(),
+    especialidad: document.getElementById('c-especialidad').value.trim(),
+    dir: document.getElementById('c-dir').value.trim(),
+    ciudad: document.getElementById('c-ciudad').value.trim(),
+    cel: document.getElementById('c-cel').value.trim(),
+    email: document.getElementById('c-email').value.trim(),
+    web: document.getElementById('c-web').value.trim(),
+    ruc: document.getElementById('c-ruc').value.trim(),
+    cuenta: document.getElementById('c-cuenta').value.trim(),
+    yape: document.getElementById('c-yape').value.trim(),
+    inicio: parseInt(document.getElementById('c-inicio').value) || 1
+  };
+  localStorage.setItem('chimpay_estudio', JSON.stringify(estudio));
+  counter = estudio.inicio;
+  localStorage.setItem('chimpay_counter', String(counter));
+  updateReciboNum();
+  cargarEstudioUI();
+  toast('Datos del estudio guardados');
+}
+
+function cargarEstudioUI() {
+  const setText = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
+  setText('edit-matricula', estudio.matricula || '—');
+  setText('edit-especialidad', estudio.especialidad || '—');
+  const dir = [estudio.dir, estudio.ciudad].filter(Boolean).join(' — ');
+  setText('edit-direccion', dir || '—');
+  setText('edit-celular', estudio.cel || '—');
+  setText('edit-correo', estudio.email || '—');
+  setText('edit-web', estudio.web || '—');
+  setText('edit-ruc', estudio.ruc || '—');
+}
+
+// =============================================
+//  DATA PERSISTENCE
+// =============================================
+function cargarDatos() {
+  const e = localStorage.getItem('chimpay_estudio');
+  if (e) {
+    estudio = JSON.parse(e);
+    // Prefill edit form
+    const set = (id, val) => { const el = document.getElementById(id); if (el && val) el.value = val; };
+    set('c-matricula', estudio.matricula);
+    set('c-especialidad', estudio.especialidad);
+    set('c-dir', estudio.dir);
+    set('c-ciudad', estudio.ciudad);
+    set('c-cel', estudio.cel);
+    set('c-email', estudio.email);
+    set('c-web', estudio.web);
+    set('c-ruc', estudio.ruc);
+    set('c-cuenta', estudio.cuenta);
+    set('c-yape', estudio.yape);
+    set('c-inicio', estudio.inicio);
+  }
+  const r = localStorage.getItem('chimpay_recibos');
+  if (r) recibos = JSON.parse(r);
+  const c = localStorage.getItem('chimpay_counter');
+  if (c) counter = parseInt(c);
+  else if (estudio.inicio) counter = estudio.inicio;
+}
+
+function borrarRecibos() {
+  if (!confirm('Eliminar todos los recibos del historial. Esta accion no se puede deshacer.')) return;
+  recibos = [];
+  localStorage.removeItem('chimpay_recibos');
+  counter = estudio.inicio || 1;
+  localStorage.setItem('chimpay_counter', String(counter));
+  updateReciboNum();
+  renderHistorial();
+  updateStats();
+  toast('Historial eliminado');
+}
+
+// =============================================
+//  MODAL
+// =============================================
+function closeOverlay(e) { if (e.target.id === 'overlay') closeModal(); }
+function closeModal() { document.getElementById('overlay').classList.remove('open'); }
+
+// =============================================
+//  FORM UTILS
+// =============================================
+function limpiarForm() {
+  ['f-nombre','f-dni','f-tel','f-email','f-domicilio','f-descripcion','f-monto','f-vencimiento','f-ref','f-obs'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f-concepto').value = '';
+  document.getElementById('f-moneda').value = 'PEN';
+  document.getElementById('f-forma').value = 'Efectivo';
+  document.getElementById('f-estado').value = 'pagado';
+  setHoy();
+  updateAmount();
+  toast('Formulario limpiado');
+}
+
+// =============================================
+//  HELPERS
+// =============================================
+function fmtDate(d) {
+  if (!d) return '—';
+  const [y, m, day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function numToWords(n, moneda = 'PEN') {
+  const u = ['','uno','dos','tres','cuatro','cinco','seis','siete','ocho','nueve','diez','once','doce','trece','catorce','quince','dieciseis','diecisiete','dieciocho','diecinueve'];
+  const d = ['','','veinte','treinta','cuarenta','cincuenta','sesenta','setenta','ochenta','noventa'];
+  const c = ['','ciento','doscientos','trescientos','cuatrocientos','quinientos','seiscientos','setecientos','ochocientos','novecientos'];
+  const curr = { PEN: 'soles', USD: 'dolares' };
+
+  const entero = Math.floor(n);
+  const cents  = Math.round((n - entero) * 100);
+
+  const g = (x) => {
+    if (x === 0) return '';
+    if (x === 100) return 'cien';
+    if (x < 20) return u[x];
+    if (x < 30) return x === 20 ? 'veinte' : 'veinti' + u[x - 20];
+    const ch = Math.floor(x/100), dec = Math.floor((x%100)/10), un = x%10;
+    const pc = ch ? c[ch] : '';
+    const pd = dec > 1 ? d[dec] + (un ? ' y ' + u[un] : '') : (dec === 1 ? u[10+un] : (un ? u[un] : ''));
+    return [pc, pd].filter(Boolean).join(' ');
+  };
+
+  const miles = Math.floor(entero/1000), resto = entero%1000;
+  let res = '';
+  if (miles) res += (miles === 1 ? 'mil' : g(miles) + ' mil');
+  if (resto)  res += (res ? ' ' : '') + g(resto);
+  if (!res) res = 'cero';
+  res = res.charAt(0).toUpperCase() + res.slice(1);
+  res += ' ' + (curr[moneda] || 'soles');
+  if (cents) res += ' con ' + String(cents).padStart(2,'0') + '/100';
+  return res + '.';
+}
+</script>
+</body>
+</html>
