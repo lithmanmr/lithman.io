@@ -563,7 +563,7 @@ select {
   <div class="panel active" id="panel-nuevo">
 
     <div class="recibo-badge">
-      <span class="label">Numero de Recibo</span>
+      <span class="label">Número de Recibo</span>
       <span class="num" id="recibo-num-display">#00001</span>
     </div>
 
@@ -589,7 +589,7 @@ select {
           </div>
         </div>
         <div class="form-group">
-          <label>Correo electronico</label>
+          <label>Correo electrónico</label>
           <input type="email" id="f-email" placeholder="correo@mail.com" autocomplete="email">
         </div>
         <div class="form-group">
@@ -627,12 +627,12 @@ select {
           </select>
         </div>
         <div class="form-group">
-          <label>Descripcion / Expediente / Causa</label>
+          <label>Descripción / Expediente / Causa</label>
           <textarea id="f-descripcion" placeholder="Ej: Expediente N° 1234-2024-JUZG. Caso Lopez vs. Martinez por desalojo."></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
-            <label>Fecha de emision *</label>
+            <label>Fecha de emisión *</label>
             <input type="date" id="f-fecha">
           </div>
           <div class="form-group">
@@ -647,7 +647,7 @@ select {
     <div class="card">
       <div class="card-head">
         <div class="card-head-line"></div>
-        <h2>Informacion de Pago</h2>
+        <h2>Información de Pago</h2>
       </div>
       <div class="card-body">
         <div class="form-row">
@@ -687,7 +687,7 @@ select {
           </div>
         </div>
         <div class="form-group">
-          <label>Referencia / N° operacion</label>
+          <label>Referencia / N° operación</label>
           <input type="text" id="f-ref" placeholder="N° de operacion o referencia">
         </div>
         <div class="amount-box">
@@ -735,7 +735,7 @@ select {
     <div class="card">
       <div class="card-head">
         <div class="card-head-line"></div>
-        <h2>Informacion del Consultorio</h2>
+        <h2>Información del Consultorio</h2>
       </div>
       <div class="card-body">
         <div class="info-row">
@@ -784,7 +784,7 @@ select {
       </div>
       <div class="card-body">
         <div class="form-group">
-          <label>Matricula CAL</label>
+          <label>Matrícula CAL</label>
           <input type="text" id="c-matricula" placeholder="Ej: CAL N° 12345">
         </div>
         <div class="form-group">
@@ -792,7 +792,7 @@ select {
           <input type="text" id="c-especialidad" placeholder="Ej: Derecho Civil y Comercial">
         </div>
         <div class="form-group">
-          <label>Direccion de oficina</label>
+          <label>Dirección de oficina</label>
           <input type="text" id="c-dir" placeholder="Ej: Jr. de la Union 1234, Of. 301">
         </div>
         <div class="form-group">
@@ -800,15 +800,15 @@ select {
           <input type="text" id="c-ciudad" placeholder="Ej: Lima — Lima">
         </div>
         <div class="form-group">
-          <label>Celular / Telefono</label>
+          <label>Celular / Teléfono</label>
           <input type="tel" id="c-cel" placeholder="+51 987 654 321">
         </div>
         <div class="form-group">
-          <label>Correo electronico</label>
+          <label>Correo electrónico</label>
           <input type="email" id="c-email" placeholder="consultas@chimpay.pe">
         </div>
         <div class="form-group">
-          <label>Pagina web</label>
+          <label>Página web</label>
           <input type="text" id="c-web" placeholder="www.chimpay.pe">
         </div>
         <div class="form-group">
@@ -824,7 +824,7 @@ select {
           <input type="text" id="c-yape" placeholder="+51 987 654 321">
         </div>
         <div class="form-group">
-          <label>Numero inicial de recibos</label>
+          <label>Número inicial de recibos</label>
           <input type="number" id="c-inicio" placeholder="1" min="1">
         </div>
         <button class="btn btn-primary" onclick="guardarEstudio()">Guardar datos</button>
@@ -834,7 +834,7 @@ select {
     <div class="card">
       <div class="card-head">
         <div class="card-head-line"></div>
-        <h2>Gestion de datos</h2>
+        <h2>Gestión de datos</h2>
       </div>
       <div class="card-body">
         <button class="btn btn-danger" onclick="borrarRecibos()">Eliminar todos los recibos</button>
@@ -1015,6 +1015,8 @@ function generarRecibo() {
     btnShare.style.display = 'none';
   }
 
+  document.querySelector('.btn-primary[onclick="descargarPDF()"]').textContent = 'Descargar PDF';
+
   document.getElementById('overlay').classList.add('open');
 }
 
@@ -1025,15 +1027,17 @@ function descargarPDF() {
   if (!currentRecibo) return;
   closeModal();
 
-  // Save
-  recibos.unshift(currentRecibo);
-  localStorage.setItem('chimpay_recibos', JSON.stringify(recibos));
-  counter++;
-  if (estudio.inicio) localStorage.setItem('chimpay_counter', String(counter));
-  else localStorage.setItem('chimpay_counter', String(counter));
-  updateReciboNum();
-  renderHistorial();
-  updateStats();
+  // Solo guarda si es recibo NUEVO (no está en el historial aún)
+  const yaExiste = recibos.some(r => r.id === currentRecibo.id);
+  if (!yaExiste) {
+    recibos.unshift(currentRecibo);
+    localStorage.setItem('chimpay_recibos', JSON.stringify(recibos));
+    counter++;
+    localStorage.setItem('chimpay_counter', String(counter));
+    updateReciboNum();
+    renderHistorial();
+    updateStats();
+  }
 
   toast('Generando PDF...');
   setTimeout(() => buildPDF(currentRecibo), 350);
@@ -1445,7 +1449,7 @@ function getPDFDoc(r) {
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9.5);
   doc.setTextColor(...NAVY);
-  doc.text('Dr. Iván Chimpay Prado', PW / 2, Y + 8, { align: 'center' });
+  doc.text('Dr. Iván Rafael Chimpay Prado', PW / 2, Y + 8, { align: 'center' });
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(7.5);
   doc.setTextColor(...MUTED);
@@ -1559,6 +1563,7 @@ function verRecibo(i) {
   document.getElementById('overlay').classList.add('open');
   const btnShare = document.getElementById('btn-share');
   btnShare.style.display = navigator.share ? 'block' : 'none';
+  document.querySelector('.btn-primary[onclick="descargarPDF()"]').textContent = 'Ver PDF';
 }
 
 function updateStats() {
